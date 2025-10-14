@@ -15,6 +15,7 @@ minikube start -p stage --memory 2048 --cpus 2
 # Prod Cluster
 minikube start -p prod --memory 2048 --cpus 2
 ```
+need to added all the clusters to argocd
 
 Step 2: Install ArgoCD in DevOps Cluster
 ```
