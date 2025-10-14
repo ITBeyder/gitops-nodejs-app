@@ -3,7 +3,7 @@ name: PR Review Env
 on:
   pull_request:
     types: [opened, synchronize, reopened, closed]
-    
+
   workflow_dispatch:
 jobs:
   build:
@@ -43,5 +43,3 @@ jobs:
         uses: actions-ecosystem/action-add-labels@v1
         with:
           labels: review
-        env:
-          GITHUB_TOKEN: ${{ secrets.TOKEN }}
