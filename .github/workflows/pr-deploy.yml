@@ -43,3 +43,5 @@ jobs:
         uses: actions-ecosystem/action-add-labels@v1
         with:
           labels: review
+        env:
+          GITHUB_TOKEN: ${{ secrets.TOKEN }}
