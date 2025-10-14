@@ -106,6 +106,7 @@ Create repo secrets in github for
 `ARGOCD_PASSWORD`
 `ARGOCD_USERNAME`
 `ARGOCD_SERVER`
+`TOKEN`
 
 Create `.github/workflows/pr-deploy.yml`
 ```
@@ -134,7 +135,7 @@ jobs:
       - name: Build Docker image
         if: github.event.action != 'closed'
         run: |
-          docker build -t $DOCKERHUB_USERNAME/nodejs-app:$IMAGE_TAG .
+          docker build -t $DOCKERHUB_USERNAME/gitops-nodejs-app:$IMAGE_TAG .
       
       - name: Docker login
         if: github.event.action != 'closed'
@@ -142,10 +143,61 @@ jobs:
 
       - name: Push Docker image
         if: github.event.action != 'closed'
-        run: docker push $DOCKERHUB_USERNAME/nodejs-app:$IMAGE_TAG
+        run: docker push $DOCKERHUB_USERNAME/gitops-nodejs-app:$IMAGE_TAG
 
       - name: Update Helm Chart Tag
         if: github.event.action != 'closed'
         run: |
-          sed -i "s/tag: .*/tag: $IMAGE_TAG/" nodejs-app-chart/values.yaml
+          sed -i "s/tag: .*/tag: $IMAGE_TAG/" gitops-nodejs-app-chart/values.yaml
+
+      - name: Add review label
+        uses: actions-ecosystem/action-add-labels@v1
+        with:
+          labels: review
+        env:
+          GITHUB_TOKEN: ${{ secrets.TOKEN }}
 ```
+
+Step 7: ArgoCD ApplicationSet with PR generator
+
+applicationset.yaml
+```
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: pr-reviews
+  namespace: argocd
+spec:
+  generators:
+  - pullRequest:
+      repoURL: https://github.com/ITBeyder/gitops-nodejs-app.git
+      labels:
+        - review
+  template:
+    metadata:
+      name: pr-{{PR_NUMBER}}
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/ITBeyder/gitops-nodejs-app.git
+        targetRevision: HEAD
+        path: gitops-nodejs-app-chart
+        helm:
+          valueFiles:
+            - values.yaml
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: pr-{{PR_NUMBER}}
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+```
+
+Step 8: Workflow Summary
+
+* PR with review label → GitHub Actions triggers.
+* Build Docker image → push to DockerHub.
+* Update Helm chart image tag.
+* ArgoCD ApplicationSet deploys to Test cluster → dynamic namespace.
+* PR merged/closed → ArgoCD deletes the namespace.

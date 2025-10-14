@@ -37,3 +37,10 @@ jobs:
         if: github.event.action != 'closed'
         run: |
           sed -i "s/tag: .*/tag: $IMAGE_TAG/" gitops-nodejs-app-chart/values.yaml
+
+      - name: Add review label
+        uses: actions-ecosystem/action-add-labels@v1
+        with:
+          labels: review
+        env:
+          GITHUB_TOKEN: ${{ secrets.TOKEN }}

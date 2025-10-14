@@ -1,0 +1,30 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: pr-reviews
+  namespace: argocd
+spec:
+  generators:
+  - pullRequest:
+      repoURL: https://github.com/ITBeyder/gitops-nodejs-app.git
+      labels:
+        - review
+  template:
+    metadata:
+      name: pr-{{PR_NUMBER}}
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/ITBeyder/gitops-nodejs-app.git
+        targetRevision: HEAD
+        path: gitops-nodejs-app-chart
+        helm:
+          valueFiles:
+            - values.yaml
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: pr-{{PR_NUMBER}}
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
