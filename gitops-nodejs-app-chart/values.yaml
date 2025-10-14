@@ -1,0 +1,9 @@
+replicaCount: 1
+
+image:
+  repository: itaybeyder/gitops-nodejs-app
+  tag: latest
+  pullPolicy: Always
+
+service:
+  port: 3000
