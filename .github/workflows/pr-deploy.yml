@@ -3,7 +3,7 @@ name: PR Review Env
 on:
   pull_request:
     types: [opened, synchronize, reopened, closed]
-
+  workflow_dispatch:
 jobs:
   build:
     runs-on: ubuntu-latest
