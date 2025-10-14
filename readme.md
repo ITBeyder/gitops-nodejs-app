@@ -100,8 +100,14 @@ spec:
 
 Step 6: GitHub Repository & CI/CD
 
-Create `.github/workflows/pr-deploy.yml`
+Create repo secrets in github for 
+`DOCKERHUB_USERNAME` 
+`DOCKERHUB_PASSWORD`
+`ARGOCD_PASSWORD`
+`ARGOCD_USERNAME`
+`ARGOCD_SERVER`
 
+Create `.github/workflows/pr-deploy.yml`
 ```
 name: PR Review Env
 
@@ -110,7 +116,7 @@ on:
     types: [opened, synchronize, reopened, closed]
 
 jobs:
-  build-and-deploy:
+  build:
     runs-on: ubuntu-latest
     env:
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -119,16 +125,17 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Set PR Namespace
+      - name: Set PR Namespace and Image Tag
         if: github.event.action != 'closed'
-        run: echo "NAMESPACE=pr-${{ github.event.pull_request.number }}" >> $GITHUB_ENV
+        run: |
+          echo "PR_NUMBER=${{ github.event.pull_request.number }}" >> $GITHUB_ENV
+          echo "IMAGE_TAG=pr-${{ github.event.pull_request.number }}" >> $GITHUB_ENV
 
       - name: Build Docker image
         if: github.event.action != 'closed'
         run: |
-          docker build -t $DOCKERHUB_USERNAME/nodejs-app:pr-${{ github.event.pull_request.number }} .
-          echo "IMAGE_TAG=pr-${{ github.event.pull_request.number }}" >> $GITHUB_ENV
-
+          docker build -t $DOCKERHUB_USERNAME/nodejs-app:$IMAGE_TAG .
+      
       - name: Docker login
         if: github.event.action != 'closed'
         run: echo $DOCKERHUB_PASSWORD | docker login -u $DOCKERHUB_USERNAME --password-stdin
@@ -137,26 +144,8 @@ jobs:
         if: github.event.action != 'closed'
         run: docker push $DOCKERHUB_USERNAME/nodejs-app:$IMAGE_TAG
 
-      - name: Update Helm Chart
+      - name: Update Helm Chart Tag
         if: github.event.action != 'closed'
         run: |
           sed -i "s/tag: .*/tag: $IMAGE_TAG/" nodejs-app-chart/values.yaml
-
-      - name: Deploy via ArgoCD ApplicationSet
-        if: github.event.action != 'closed'
-        uses: argoproj/argocd-action@v2
-        with:
-          argocd-server: ${{ secrets.ARGOCD_SERVER }}
-          username: ${{ secrets.ARGOCD_USERNAME }}
-          password: ${{ secrets.ARGOCD_PASSWORD }}
-          command: app sync pr-${{ github.event.pull_request.number }}
-
-      - name: Delete PR environment
-        if: github.event.action == 'closed'
-        uses: argoproj/argocd-action@v2
-        with:
-          argocd-server: ${{ secrets.ARGOCD_SERVER }}
-          username: ${{ secrets.ARGOCD_USERNAME }}
-          password: ${{ secrets.ARGOCD_PASSWORD }}
-          command: app delete pr-${{ github.event.pull_request.number }}
 ```
