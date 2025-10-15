@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: argocd-<env>-cluster-secret
+  namespace: argocd
+  labels:
+    argocd.argoproj.io/secret-type: cluster
+type: Opaque
+stringData:
+  name: argocd-<env>-cluster
+  server: https://172.19.0.x:6443
+  config: |
+    {
+      "bearerToken": "",
+      "tlsClientConfig": {
+        "insecure": false,
+        "caData": ""
+      }
+    }
