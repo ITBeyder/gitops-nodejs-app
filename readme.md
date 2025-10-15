@@ -1,22 +1,9 @@
+# GitOps
+
 Set up a full GitOps workflow with ArgoCD in a multi-cluster Minikube environment, dynamic environments per PR, and automated cleanup.
 
-Step 1: Create 4 Minikube Clusters
 
-```
-# DevOps Cluster (ArgoCD controller will run here)
-minikube start -p devops --memory 4096 --cpus 2
-
-# Test Cluster
-minikube start -p test --memory 2048 --cpus 2
-
-# Stage Cluster
-minikube start -p stage --memory 2048 --cpus 2
-
-# Prod Cluster
-minikube start -p prod --memory 2048 --cpus 2
-```
-
-Step 2: Install ArgoCD in DevOps Cluster
+## Step 2: Install ArgoCD in DevOps Cluster
 ```
 kubectl create namespace argocd
 kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
@@ -25,12 +12,15 @@ Expose ArgoCD API server
 `kubectl port-forward svc/argocd-server -n argocd 8080:443`
 
 Get admin password
-`kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d)`
+`kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d`
 
 Login
 `argocd login localhost:8080 --username admin --password $(kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d)`
 
-Step 3: Create Node.js App
+### Add 3 clusters to be managed by argocd 
+
+
+## Step 3: Create Node.js App
 ```
 mkdir gitops-nodejs-app && cd gitops-nodejs-app
 npm init -y
@@ -47,7 +37,7 @@ app.get('/', (req, res) => res.send('Hello from PR env!'));
 app.listen(port, () => console.log(`App listening on port ${port}`));
 ```
 
-Step 4: Dockerfile
+## Step 4: Dockerfile
 ```
 FROM node:18-alpine
 WORKDIR /app
@@ -58,7 +48,7 @@ EXPOSE 3000
 CMD ["node", "server.js"]
 ```
 
-Step 5: Helm Chart
+## Step 5: Helm Chart
 `helm create gitops-nodejs-app-chart`
 
 Modify values.yaml
@@ -98,7 +88,7 @@ spec:
             - containerPort: {{ .Values.service.port }}
 ```
 
-Step 6: GitHub Repository & CI/CD
+## Step 6: GitHub Repository & CI/CD
 
 Create repo secrets in github for 
 `DOCKERHUB_USERNAME` 
@@ -158,7 +148,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.TOKEN }}
 ```
 
-Step 7: ArgoCD ApplicationSet with PR generator
+## Step 7: ArgoCD ApplicationSet with PR generator
 
 applicationset.yaml
 ```
@@ -194,7 +184,7 @@ spec:
           selfHeal: true
 ```
 
-Step 8: Workflow Summary
+## Step 8: Workflow Summary
 
 * PR with review label → GitHub Actions triggers.
 * Build Docker image → push to DockerHub.

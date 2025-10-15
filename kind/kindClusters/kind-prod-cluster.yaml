@@ -1,0 +1,15 @@
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: kind-prod-cluster
+networking:
+  podSubnet: "10.247.0.0/16"
+  serviceSubnet: "10.99.0.0/12"
+nodes:
+- role: control-plane
+  extraPortMappings:
+  - containerPort: 30200
+    hostPort: 30200
+    protocol: TCP
+  - containerPort: 30201
+    hostPort: 30201
+    protocol: TCP

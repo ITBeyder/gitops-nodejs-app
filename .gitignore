@@ -1,1 +1,2 @@
 gitops-nodejs-app/node_modules
+kind/argocd-*-cluster.yaml

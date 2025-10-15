@@ -1,0 +1,15 @@
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: kind-test-cluster
+networking:
+  podSubnet: "10.245.0.0/16"
+  serviceSubnet: "10.97.0.0/12"
+nodes:
+- role: control-plane
+  extraPortMappings:
+  - containerPort: 30000
+    hostPort: 30000
+    protocol: TCP
+  - containerPort: 30001
+    hostPort: 30001
+    protocol: TCP
