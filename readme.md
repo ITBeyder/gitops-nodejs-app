@@ -19,6 +19,7 @@ Login
 
 ### Add 3 clusters to be managed by argocd 
 
+`kind/install.sh`
 
 ## Step 3: Create Node.js App
 ```
@@ -97,6 +98,8 @@ Create repo secrets in github for
 `ARGOCD_USERNAME`
 `ARGOCD_SERVER`
 `TOKEN`
+
+**Create Token with nececery opermissions for github action to run aginst your repo**
 
 Create `.github/workflows/pr-deploy.yml`
 ```
